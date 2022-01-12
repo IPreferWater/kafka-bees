@@ -1,0 +1,25 @@
+{
+    "type": "record",
+    "name": "DataValue",
+    "namespace": "ipreferwater.todo",
+    "fields": [
+      {
+        "name": "colors",
+        "type": {
+            "type": "map",
+            "values" : "int"
+          },
+        "doc": "map with the percentage of color found on the object detected"
+      },
+      {
+        "name": "size",
+        "type": "double",
+        "doc": "size in mm of the object detected"
+      },
+      {
+        "name": "has_wings",
+        "type": "boolean",
+        "doc": "do the detected object as wings"
+      }
+    ]
+  }

@@ -1,0 +1,17 @@
+{
+    "type": "record",
+    "name": "DataKey",
+    "namespace": "ipreferwater.todo",
+    "fields": [
+      {
+        "name": "hive_id",
+        "type": "int",
+        "doc": "unique ID of the hive where we had the detection"
+      },
+      {
+        "name": "direction",
+        "type": "boolean",
+        "doc": "true mean the detected object is considered entering, false going out"
+      }
+    ]
+  }
