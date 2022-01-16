@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
+//	"github.com/hajimehoshi/ebiten/v2"
+//	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
-func contains(keys []ebiten.Key, key ebiten.Key) bool {
+/*func contains(keys []ebiten.Key, key ebiten.Key) bool {
 	for _, v := range keys {
 		if v == key {
 			return true
@@ -46,3 +46,4 @@ func checkAction(g *Game) {
 func animate(g *Game){
 	g.mainCharacter.animate(g)
 }
+*/

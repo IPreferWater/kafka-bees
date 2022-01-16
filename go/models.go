@@ -9,6 +9,7 @@ const (
 
 
 type Hive struct {
+	ID int
 	position  coordinate
 	beesCount int
 	beesToAdd int

@@ -7,7 +7,7 @@
         "name": "colors",
         "type": {
             "type": "map",
-            "values" : "int"
+            "values" : "double"
           },
         "doc": "map with the percentage of color found on the object detected"
       },

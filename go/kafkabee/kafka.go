@@ -32,6 +32,7 @@ type kafkaConfig struct {
 }
 
 func Init() {
+
 	conf := getConfig()
 
 	kafkaConfigMap := &kafka.ConfigMap{
@@ -58,15 +59,13 @@ func Init() {
 				m := ev
 				if ev.TopicPartition.Error != nil {
 					fmt.Printf("Error delivering the message '%s'\n error %s\n", m.Key, ev.TopicPartition.Error)
-				}
-				// uncoment this part to debug your succes
-				else {
+				}else {
 					fmt.Printf("Message delivered successfully!\n key : %s\n headers : %s\n opaque : %s\n timestamp: %s\n value : %s \n offet : %s \n partition : %d\n topic : %s\n", m.Key, m.Headers, m.Opaque, m.Timestamp, m.Value, m.TopicPartition.Offset, m.TopicPartition.Partition, m.TopicPartition.Topic)
 				}
 			}
 		}
-	}()*/
-	defer p.Close()
+	}()
+	//defer p.Close()*/
 
 	schemaRegistryClient := srclient.CreateSchemaRegistryClient(conf.schemaRegistryUrl)
 
@@ -75,21 +74,30 @@ func Init() {
 		scClient:    schemaRegistryClient,
 		valueSchema: getSchema(schemaRegistryClient, conf.schemaNameValue),
 		keySchema:   getSchema(schemaRegistryClient, conf.schemaNameKey),
+		config: conf,
 	}
+
+	fmt.Println(conf)
+	fmt.Println(conf.topic)
+	fmt.Println("kafka OK")
 
 }
 
 func (k KafkaStreaming) Produce(d Data) error {
 
-	recordValue := getValueByte(k.valueSchema, d.DataValue)
+	recordValue := getValueByte(k.valueSchema, d.DataValue)	
 	recordKey := getValueByte(k.keySchema, d.DataKey)
 
-	errProduce := k.producer.Produce(
-		&kafka.Message{
-			TopicPartition: kafka.TopicPartition{Topic: &k.config.topic, Partition: -1},
-			Value:          recordValue,
-			Key:            recordKey,
-		}, nil)
+		errProduce := k.producer.Produce(
+			&kafka.Message{
+				TopicPartition: kafka.TopicPartition{
+					Topic:     &k.config.topic,
+					Partition: -1,
+				},
+				Value:          recordValue,
+				Key:            recordKey,
+			}, nil,
+		)
 
 	if errProduce != nil {
 		panic(fmt.Sprintf("errProduce %s", errProduce))
@@ -100,6 +108,17 @@ func (k KafkaStreaming) Produce(d Data) error {
 
 func getConfig() kafkaConfig {
 	return kafkaConfig{
+		kafkaUrl:          "localhost:29092",
+		schemaRegistryUrl: "http://localhost:8081",
+		securityProtocol:  "PLAINTEXT",
+		pathCaPem:         "",
+		pathServiceCert:   "",
+		pathServiceKey:    "",
+		topic:             "detected",
+		schemaNameValue:   "detected-value",
+		schemaNameKey:     "detected-key",
+	}
+	/*return kafkaConfig{
 		kafkaUrl:          getEnvAndWarnIfMissing("KAFKA_URL"),
 		schemaRegistryUrl: getEnvAndWarnIfMissing("SCHEMA_REGISTRY_URL"),
 		securityProtocol:  getEnvAndWarnIfMissing("SECURITY_PROTOCOL"),
@@ -109,7 +128,7 @@ func getConfig() kafkaConfig {
 		topic:             getEnvAndWarnIfMissing("TOPIC"),
 		schemaNameValue:   getEnvAndWarnIfMissing("SCHEMA_NAME_VALUE"),
 		schemaNameKey:     getEnvAndWarnIfMissing("SCHEMA_NAME_KEY"),
-	}
+	}*/
 }
 
 func getEnvAndWarnIfMissing(s string) string {

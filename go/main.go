@@ -12,6 +12,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/text"
+	"github.com/ipreferwater/kafka-bees/kafkabee"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/opentype"
 )
@@ -38,17 +39,10 @@ type cache struct {
 }
 
 func init() {
-	tilesEbitenImage, _, err := ebitenutil.NewImageFromFile("./res/tiles/room.png")
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	mainCharacterEbitenImage, _, err := ebitenutil.NewImageFromFile("./res/bee.png")
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	tilesImage = tilesEbitenImage
 
 	beeImage = mainCharacterEbitenImage
 	hiveImage.Fill(color.White)
@@ -63,15 +57,15 @@ func init() {
 }
 
 type Game struct {
-	hives         []Hive
-	mapCenterX    float64
-	mapCenterY    float64
-	worldSpeed    float64
-	frame         int
+	hives      []Hive
+	mapCenterX float64
+	mapCenterY float64
+	worldSpeed float64
+	frame      int
 }
 
 func (g *Game) Update() error {
-	animate(g)
+	//animate(g)
 	return nil
 }
 
@@ -101,6 +95,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			if bee.position.x >= hive.position.x && bee.position.y >= hive.position.y+10 {
 				hivePointer.beesToCome = removeBeeNoOrder(hive.beesToCome, indexBee)
 				hivePointer.beesCount++
+				sendDetectionToStream(EuropeanBee, hive.ID, true)
 				continue
 			}
 
@@ -109,9 +104,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			}
 
 			if bee.position.y <= hive.position.y+10 {
-				beePointer.position.y += randomNumberBeetween(0,1)
+				beePointer.position.y += randomNumberBeetween(0, 1)
 			} else {
-				beePointer.position.y -= randomNumberBeetween(0,1)
+				beePointer.position.y -= randomNumberBeetween(0, 1)
 			}
 
 		}
@@ -124,12 +119,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			if bee.position.x >= hive.position.x+200 {
 				hivePointer.beesToGo = removeBeeNoOrder(hive.beesToGo, indexBee)
 				hivePointer.beesCount--
-				//TODO send to kafka
+				sendDetectionToStream(EuropeanBee, hive.ID, false)
 				continue
 			}
 
-			beePointer.position.x += randomNumberBeetween(0.5,1.5)
-			beePointer.position.y += randomNumberBeetween(-1.5,1.5)
+			beePointer.position.x += randomNumberBeetween(0.5, 1.5)
+			beePointer.position.y += randomNumberBeetween(-1.5, 1.5)
 
 		}
 
@@ -139,7 +134,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				beesToCome[i] = Bee{
 					position: coordinate{
 						//x: hive.position.x - 100,
-						x : hive.position.x - randomNumberBeetween(150, 80),
+						x: hive.position.x - randomNumberBeetween(150, 80),
 						y: float64(randomNumberBeetween(300, hive.position.y-150)),
 					},
 				}
@@ -189,16 +184,20 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func main() {
+	fmt.Println("go")
+	go kafkabee.Init()
+	go kafkabee.InitConsumer()
 	g := &Game{
 		hives: []Hive{
 			{
+				ID: 1,
 				position: coordinate{
 					x: 150,
 					y: 150,
 				},
 				beesCount:    1000,
-				beesToAdd:    15,
-				beesToRemove: 3,
+				beesToAdd:    2,
+				beesToRemove: 1,
 			}},
 		mapCenterX:    9,
 		mapCenterY:    6,

@@ -32,16 +32,16 @@ services:
     networks:
       bees-network:
 
-  bees:
-    build:
-      context: ./
-      dockerfile: Dockerfile
-    ports: 
-     - "3000:3000"
-    env_file:
-      - ./dev.env
-    networks:
-      bees-network:
+  #bees:
+  #  build:
+  #""    context: ./
+  #    dockerfile: Dockerfile
+  #  ports: 
+  #   - "3000:3000"
+  #  env_file:
+  #    - ./dev.env
+  #  networks:
+  #    bees-network:*/
 
   schema-registry:
     image: confluentinc/cp-schema-registry:6.2.0
@@ -71,5 +71,45 @@ services:
     networks:
       - bees-network
 
+  kafka-connect:
+    build:
+      context: ./kafka-connect
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres
+      - adminer  
+    ports:
+      - 8084:8084
+    env_file:
+      - ./kafka-connect/dev.env
+    networks:
+     - bees-network
+
+  postgres:
+    image: postgres:10.16
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_USER: beekeeper
+      POSTGRES_PASSWORD: beepassword
+      POSTGRES_DB: bees
+    volumes:
+      - pgsql-volume-container:/var/lib/mysql
+    ports:
+      - 5432:5432
+    networks:
+      - bees-network
+
+  adminer:
+    image: adminer:latest
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    ports:
+      - 8080:8080
+    networks:
+      - bees-network
+
 networks:
   bees-network:
+
+volumes:
+  pgsql-volume-container:

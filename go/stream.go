@@ -1,14 +1,18 @@
 package main
 
-import "github.com/IPreferWater/Bric-A-Brac-World/kafkabee"
+import (
+	"github.com/ipreferwater/kafka-bees/kafkabee"
+)
+
+//import "github.com/ipreferwater/kafka-bees/kafkabee"
 
 func sendDetectionToStream(t InsectType, hiveID int, direction bool) {
 
 	if t == EuropeanBee {
 		kafkabee.Stream.Produce(fakeBee(hiveID, direction))
+		//fmt.Printf("kafka produce be direction %t hive %d\n", direction, hiveID)
 		return
 	}
-
 }
 
 func fakeBee(hiveID int, direction bool) kafkabee.Data {
