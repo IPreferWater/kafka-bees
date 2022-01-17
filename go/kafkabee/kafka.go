@@ -10,11 +10,12 @@ import (
 )
 
 type KafkaStreaming struct {
-	producer    *kafka.Producer
-	scClient    *srclient.SchemaRegistryClient
-	valueSchema *srclient.Schema
-	keySchema   *srclient.Schema
-	config      kafkaConfig
+	producer          *kafka.Producer
+	scClient          *srclient.SchemaRegistryClient
+	valueSchema       *srclient.Schema
+	keySchema         *srclient.Schema
+	europeanBeeSchema *srclient.Schema
+	config            kafkaConfig
 }
 
 type kafkaConfig struct {
@@ -26,9 +27,11 @@ type kafkaConfig struct {
 	pathServiceCert string
 	pathServiceKey  string
 
-	topic           string
-	schemaNameValue string
-	schemaNameKey   string
+	topic                      string
+	topicEuropeanBee           string
+	schemaNameValue            string
+	schemaNameKey              string
+	europeanBeeSchemaNameValue string
 }
 
 func Init() {
@@ -70,11 +73,12 @@ func Init() {
 	schemaRegistryClient := srclient.CreateSchemaRegistryClient(conf.schemaRegistryUrl)
 
 	Stream = KafkaStreaming{
-		producer:    p,
-		scClient:    schemaRegistryClient,
-		valueSchema: getSchema(schemaRegistryClient, conf.schemaNameValue),
-		keySchema:   getSchema(schemaRegistryClient, conf.schemaNameKey),
-		config: conf,
+		producer:          p,
+		scClient:          schemaRegistryClient,
+		valueSchema:       getSchema(schemaRegistryClient, conf.schemaNameValue),
+		keySchema:         getSchema(schemaRegistryClient, conf.schemaNameKey),
+		europeanBeeSchema: getSchema(schemaRegistryClient, conf.europeanBeeSchemaNameValue),
+		config:            conf,
 	}
 
 	fmt.Println(conf)
@@ -85,19 +89,42 @@ func Init() {
 
 func (k KafkaStreaming) Produce(d Data) error {
 
-	recordValue := getValueByte(k.valueSchema, d.DataValue)	
+	recordValue := getValueByte(k.valueSchema, d.DataValue)
 	recordKey := getValueByte(k.keySchema, d.DataKey)
 
-		errProduce := k.producer.Produce(
-			&kafka.Message{
-				TopicPartition: kafka.TopicPartition{
-					Topic:     &k.config.topic,
-					Partition: -1,
-				},
-				Value:          recordValue,
-				Key:            recordKey,
-			}, nil,
-		)
+	errProduce := k.producer.Produce(
+		&kafka.Message{
+			TopicPartition: kafka.TopicPartition{
+				Topic:     &k.config.topic,
+				Partition: -1,
+			},
+			Value: recordValue,
+			Key:   recordKey,
+		}, nil,
+	)
+
+	if errProduce != nil {
+		panic(fmt.Sprintf("errProduce %s", errProduce))
+	}
+
+	return nil
+}
+
+func (k KafkaStreaming) ProduceEuropeanBee(eB europeanBee) error {
+
+	v := getValueByte(k.europeanBeeSchema, eB)
+	//recordKey := getValueByte(k.keySchema, d.DataKey)
+
+	errProduce := k.producer.Produce(
+		&kafka.Message{
+			TopicPartition: kafka.TopicPartition{
+				Topic:     &k.config.topicEuropeanBee,
+				Partition: -1,
+			},
+			Value: v,
+			Key:   []byte(fmt.Sprintf("%d", eB.HiveID)),
+		}, nil,
+	)
 
 	if errProduce != nil {
 		panic(fmt.Sprintf("errProduce %s", errProduce))
@@ -108,15 +135,17 @@ func (k KafkaStreaming) Produce(d Data) error {
 
 func getConfig() kafkaConfig {
 	return kafkaConfig{
-		kafkaUrl:          "localhost:29092",
-		schemaRegistryUrl: "http://localhost:8081",
-		securityProtocol:  "PLAINTEXT",
-		pathCaPem:         "",
-		pathServiceCert:   "",
-		pathServiceKey:    "",
-		topic:             "detected",
-		schemaNameValue:   "detected-value",
-		schemaNameKey:     "detected-key",
+		kafkaUrl:                   "localhost:29092",
+		schemaRegistryUrl:          "http://localhost:8081",
+		securityProtocol:           "PLAINTEXT",
+		pathCaPem:                  "",
+		pathServiceCert:            "",
+		pathServiceKey:             "",
+		topic:                      "detected",
+		topicEuropeanBee:           "european-bee",
+		schemaNameValue:            "detected-value",
+		schemaNameKey:              "detected-key",
+		europeanBeeSchemaNameValue: "european-bee-value",
 	}
 	/*return kafkaConfig{
 		kafkaUrl:          getEnvAndWarnIfMissing("KAFKA_URL"),
@@ -126,6 +155,7 @@ func getConfig() kafkaConfig {
 		pathServiceCert:   getEnvAndWarnIfMissing("CERTS_PATH_SERVICE_CERT"),
 		pathServiceKey:    getEnvAndWarnIfMissing("CERTS_PATH_SERVICE_KEY"),
 		topic:             getEnvAndWarnIfMissing("TOPIC"),
+		topic:             getEnvAndWarnIfMissing("TOPIC_EUROPEAN_BEE"),
 		schemaNameValue:   getEnvAndWarnIfMissing("SCHEMA_NAME_VALUE"),
 		schemaNameKey:     getEnvAndWarnIfMissing("SCHEMA_NAME_KEY"),
 	}*/

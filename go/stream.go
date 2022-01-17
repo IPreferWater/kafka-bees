@@ -39,3 +39,28 @@ func fakeBee(hiveID int, direction bool) kafkabee.Data {
 	}
 
 }
+
+func fakeAsianWasp(hiveID int, direction bool) kafkabee.Data {
+	mapColors := make(map[string]float64, 2)
+	percentageOrange := randomNumberBeetween(5, 20)
+	percentageBlack := 100 - percentageOrange
+	mapColors["orange"] = percentageOrange
+	mapColors["black"] = percentageBlack
+
+	dataValue := kafkabee.DataValue{
+		Colors:   mapColors,
+		Size:     randomNumberBeetween(18, 23),
+		HasWings: true,
+	}
+
+	dataKey := kafkabee.DataKey{
+		HiveID:    hiveID,
+		Direction: direction,
+	}
+
+	return kafkabee.Data{
+		DataValue: dataValue,
+		DataKey:   dataKey,
+	}
+
+}

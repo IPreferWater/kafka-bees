@@ -53,8 +53,8 @@ func InitConsumer() {
 		native, _, _ := schema.Codec().NativeFromBinary(msg.Value[5:])
 		value, _ := schema.Codec().TextualFromNative(nil, native)
 
-		detected := DataValue{}
-		if err := json.Unmarshal(value, &detected); err != nil {
+		detectedValue := DataValue{}
+		if err := json.Unmarshal(value, &detectedValue); err != nil {
 			panic(fmt.Sprintf("error unmarshall the string %s err => %s\n", string(value), err))
 		}
 
@@ -76,7 +76,21 @@ func InitConsumer() {
 			panic(fmt.Sprintf("error unmarshall the string %s err => %s\n", string(key), err))
 		}
 
-		fmt.Printf("key : %#v\n value : %#v\n***\n", detectedKey, detected)
+		guess(detectedValue, detectedKey)
+
+		//fmt.Printf("key : %#v\n value : %#v\n***\n", detectedKey, detectedValue)
 	}
 
+}
+
+func guess(v DataValue, k DataKey) {
+	if isEuropeanBee(v){
+		fmt.Println("go send europeanBee")
+		eB := europeanBee{
+			HiveID:    k.HiveID,
+			Size:      int(v.Size),
+			Direction: k.Direction,
+		}
+		Stream.ProduceEuropeanBee(eB)
+	}
 }

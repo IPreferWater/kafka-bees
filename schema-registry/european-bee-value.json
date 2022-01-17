@@ -1,0 +1,23 @@
+{
+    "type": "record",
+    "name": "EuropeanBeeValue",
+    "namespace": "ipreferwater.todo",
+    "fields": [
+      {
+        "name": "hive_id",
+        "type": "int",
+        "field": "hive_id",
+        "doc": "unique ID of the hive where we had the detection"
+      },
+      {
+        "name": "size",
+        "type": "int",
+        "doc": "size in mm of the object detected"
+      },
+      {
+        "name": "direction",
+        "type": "boolean",
+        "doc": "true mean the detected object is considered entering, false going out"
+      }
+    ]
+  }
