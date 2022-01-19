@@ -8,6 +8,10 @@ import (
 
 func sendDetectionToStream(t InsectType, hiveID int, direction bool) {
 
+	if kafkabee.Stream == nil {
+		//TODO can't send to stream
+		return
+	}
 	if t == EuropeanBee {
 		kafkabee.Stream.Produce(fakeBee(hiveID, direction))
 		//fmt.Printf("kafka produce be direction %t hive %d\n", direction, hiveID)

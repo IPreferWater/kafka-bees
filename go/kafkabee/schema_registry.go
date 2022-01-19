@@ -9,10 +9,10 @@ import (
 	"github.com/riferrei/srclient"
 )
 
-func getSchema(client *srclient.SchemaRegistryClient, schemaName string) *srclient.Schema {
+func getSchema(client *srclient.SchemaRegistryClient, schemaName string) (*srclient.Schema, error) {
 	schema, err := client.GetLatestSchema(schemaName)
 	if err != nil {
-		panic(fmt.Sprintf("error getLatestSchema %s", err))
+		return nil, fmt.Errorf("error getLatestSchema %s", err)
 	}
 
 	fmt.Printf("get latest %s id = %d\n", schemaName, schema.ID())
@@ -21,15 +21,15 @@ func getSchema(client *srclient.SchemaRegistryClient, schemaName string) *srclie
 		fmt.Printf("schema %s is nil !\n", schemaName)
 		schemaBytes, errReadFile := ioutil.ReadFile("complexType.avsc")
 		if errReadFile != nil {
-			panic(fmt.Sprintf("error read file %s", errReadFile))
+			return nil, fmt.Errorf("error read file %s", errReadFile)
 		}
 		schema, err = client.CreateSchema(schemaName, string(schemaBytes), srclient.Avro)
 		if err != nil {
-			panic(fmt.Sprintf("Error creating the schema %s", err))
+			return nil, fmt.Errorf("Error creating the schema %s", err)
 		}
 	}
 
-	return schema
+	return schema, nil
 }
 
 func getValueByte(schema *srclient.Schema, toMarshall interface{}) []byte {

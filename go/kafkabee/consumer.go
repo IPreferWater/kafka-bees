@@ -9,7 +9,7 @@ import (
 	"github.com/riferrei/srclient"
 )
 
-func InitConsumer() {
+func InitConsumer() error {
 
 	conf := getConfig()
 
@@ -28,7 +28,7 @@ func InitConsumer() {
 
 	c, err := kafka.NewConsumer(kafkaConfigMap)
 	if err != nil {
-		panic(fmt.Sprintf("can't create consumer %s", err))
+		return(fmt.Errorf("can't create consumer %s", err))
 	}
 
 	err = c.SubscribeTopics([]string{conf.topic}, nil)
@@ -38,7 +38,7 @@ func InitConsumer() {
 	for {
 		msg, err := c.ReadMessage(-1)
 		if err != nil {
-			panic(fmt.Sprintf("error readin msg %s\n", err))
+			return(fmt.Errorf("error readin msg %s\n", err))
 		}
 
 		//value
@@ -47,7 +47,7 @@ func InitConsumer() {
 		schema, err := schemaRegistryClient.GetSchema(int(schemaID))
 
 		if err != nil {
-			panic(fmt.Sprintf("Error getting the schema with id '%d' %s", schemaID, err))
+			panic(fmt.Errorf("Error getting the schema with id '%d' %s", schemaID, err))
 		}
 
 		native, _, _ := schema.Codec().NativeFromBinary(msg.Value[5:])
@@ -55,7 +55,7 @@ func InitConsumer() {
 
 		detectedValue := DataValue{}
 		if err := json.Unmarshal(value, &detectedValue); err != nil {
-			panic(fmt.Sprintf("error unmarshall the string %s err => %s\n", string(value), err))
+			panic(fmt.Errorf("error unmarshall the string %s err => %s\n", string(value), err))
 		}
 
 		//key
@@ -65,7 +65,7 @@ func InitConsumer() {
 		schemaKey, err := schemaRegistryClient.GetSchema(int(schemaIDKey))
 
 		if err != nil {
-			panic(fmt.Sprintf("Error getting the schema key with id '%d' %s", schemaIDKey, err))
+			return fmt.Errorf("Error getting the schema key with id '%d' %s", schemaIDKey, err)
 		}
 
 		nativeKey, _, _ := schemaKey.Codec().NativeFromBinary(msg.Key[5:])

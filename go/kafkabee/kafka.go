@@ -34,7 +34,7 @@ type kafkaConfig struct {
 	europeanBeeSchemaNameValue string
 }
 
-func Init() {
+func Init() error {
 
 	conf := getConfig()
 
@@ -49,10 +49,12 @@ func Init() {
 		kafkaConfigMap.SetKey("ssl.key.location", conf.pathServiceKey)
 	}
 
+	fmt.Println("0")
 	p, err := kafka.NewProducer(kafkaConfigMap)
 	if err != nil {
-		panic(fmt.Sprintf("error creating producer %s", err))
+		return(fmt.Errorf("error creating producer %s", err))
 	}
+	fmt.Println("1")
 
 	// this will check the status of the sent messages
 	/*go func() {
@@ -72,18 +74,33 @@ func Init() {
 
 	schemaRegistryClient := srclient.CreateSchemaRegistryClient(conf.schemaRegistryUrl)
 
+	valueSchema, err := getSchema(schemaRegistryClient, conf.schemaNameValue)
+	if err != nil {
+		return fmt.Errorf("error getting schema %s => %s", conf.schemaNameValue, err)
+	}
+	keySchema, err := getSchema(schemaRegistryClient, conf.schemaNameKey)
+	if err != nil {
+		return fmt.Errorf("error getting schema %s => %s", conf.schemaNameKey, err)
+	}
+
+	europeanBeeSchema, err := getSchema(schemaRegistryClient, conf.europeanBeeSchemaNameValue)
+	if err != nil {
+		return fmt.Errorf("error getting schema %s => %s", conf.europeanBeeSchemaNameValue, err)
+	}
 	Stream = KafkaStreaming{
 		producer:          p,
 		scClient:          schemaRegistryClient,
-		valueSchema:       getSchema(schemaRegistryClient, conf.schemaNameValue),
-		keySchema:         getSchema(schemaRegistryClient, conf.schemaNameKey),
-		europeanBeeSchema: getSchema(schemaRegistryClient, conf.europeanBeeSchemaNameValue),
+		valueSchema:       valueSchema,
+		keySchema:         keySchema,
+		europeanBeeSchema: europeanBeeSchema,
 		config:            conf,
 	}
 
 	fmt.Println(conf)
 	fmt.Println(conf.topic)
 	fmt.Println("kafka OK")
+
+	return nil
 
 }
 
