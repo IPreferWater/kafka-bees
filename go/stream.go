@@ -6,16 +6,21 @@ import (
 
 //import "github.com/ipreferwater/kafka-bees/kafkabee"
 
-func sendDetectionToStream(t InsectType, hiveID int, direction bool) {
+func sendDetectionToStream(t InsecType, hiveID int, direction bool) {
 
 	if kafkabee.Stream == nil {
 		//TODO can't send to stream
 		return
 	}
-	if t == EuropeanBee {
+
+	if t == Bee {
 		kafkabee.Stream.Produce(fakeBee(hiveID, direction))
 		//fmt.Printf("kafka produce be direction %t hive %d\n", direction, hiveID)
 		return
+	}
+
+	if t == Wasp {
+		kafkabee.Stream.Produce(fakeBee(hiveID, true))
 	}
 }
 

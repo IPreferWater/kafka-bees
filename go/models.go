@@ -1,13 +1,5 @@
 package main
 
-type InsectType int
-
-const (
-    EuropeanBee InsectType = iota
-    AsianWasp
-)
-
-
 type Hive struct {
 	ID int
 	position  coordinate
