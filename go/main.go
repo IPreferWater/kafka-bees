@@ -29,7 +29,7 @@ const (
 var (
 	tilesImage      *ebiten.Image
 	beeImage        *ebiten.Image
-	hiveImage       = ebiten.NewImage(100, 100)
+	hiveImage       *ebiten.Image
 	mplusNormalFont font.Face
 )
 
@@ -39,13 +39,18 @@ type cache struct {
 }
 
 func init() {
-	mainCharacterEbitenImage, _, err := ebitenutil.NewImageFromFile("./res/bee.png")
+	beeCharacterEbitenImage, _, err := ebitenutil.NewImageFromFile("./res/bee.png")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	beeImage = mainCharacterEbitenImage
-	hiveImage.Fill(color.White)
+	beeImage = beeCharacterEbitenImage
+
+	hiveEbitenImage, _, err := ebitenutil.NewImageFromFile("./res/hive.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+	hiveImage = hiveEbitenImage
 
 	tt, err := opentype.Parse(fonts.MPlus1pRegular_ttf)
 	const dpi = 72
@@ -82,56 +87,79 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for indexHive, hive := range g.hives {
 		hivePointer := &g.hives[indexHive]
 
-		squareOpt := &ebiten.DrawImageOptions{}
-		squareOpt.GeoM.Translate(hive.position.x, hive.position.y)
-		screen.DrawImage(hiveImage, squareOpt)
-		text.Draw(screen, fmt.Sprintf("%d", hive.beesCount), mplusNormalFont, int(hive.position.x)+20, int(hive.position.y)+50, color.RGBA{0, 255, 0, 255})
+		hiveOpt := &ebiten.DrawImageOptions{}
+		hiveOpt.GeoM.Scale(6, 6)
+		hiveOpt.GeoM.Translate(hive.position.x, hive.position.y)
+		screen.DrawImage(hiveImage, hiveOpt)
+		text.Draw(screen, fmt.Sprintf("%d", hive.beesCount), mplusNormalFont, int(hive.position.x)+50, int(hive.position.y)+10, color.RGBA{0, 255, 0, 255})
 
-		for indexBee, bee := range hive.beesToCome {
-			beePointer := &hive.beesToCome[indexBee]
-			beeImg, beeOpts := drawBee(bee.position.x, bee.position.y)
-			screen.DrawImage(beeImg, beeOpts)
+		for insectType, arrInsects := range hivePointer.insectsToCome {
 
-			if bee.position.x >= hive.position.x && bee.position.y >= hive.position.y+10 {
-				hivePointer.beesToCome = removeBeeNoOrder(hive.beesToCome, indexBee)
-				hivePointer.beesCount++
-				sendDetectionToStream(EuropeanBee, hive.ID, true)
-				continue
-			}
+			if insectType == Bee {
 
-			if bee.position.x <= hive.position.x {
-				beePointer.position.x += 0.5
-			}
+				for indexBee, bee := range arrInsects {
 
-			if bee.position.y <= hive.position.y+10 {
-				beePointer.position.y += randomNumberBeetween(0, 1)
-			} else {
-				beePointer.position.y -= randomNumberBeetween(0, 1)
+					//arrInsects is not updated when we removed an insect, if the indexBee is larger than the arrSize, it means he finished
+					if indexBee >= len(hivePointer.insectsToCome[Bee]) {
+						break
+					}
+					beePointer := &hive.insectsToCome[Bee][indexBee]
+					beeImg, beeOpts := drawBee(bee.position.x, bee.position.y)
+					screen.DrawImage(beeImg, beeOpts)
+
+					if bee.position.x >= hive.hiveEntry.x && bee.position.y >= hive.hiveEntry.y {
+						hivePointer.insectsToCome[Bee] = removeBeeNoOrder(hive.insectsToCome[Bee], indexBee)
+						hivePointer.beesCount++
+						sendDetectionToStream(EuropeanBee, hive.ID, true)
+						continue
+					}
+
+					if bee.position.x <= hive.hiveEntry.x {
+						beePointer.position.x += 0.5
+					}
+
+					if bee.position.y <= hive.hiveEntry.y {
+						beePointer.position.y += randomNumberBeetween(0, 1)
+					} else {
+						beePointer.position.y -= randomNumberBeetween(0, 1)
+					}
+
+				}
 			}
 
 		}
 
-		for indexBee, bee := range hive.beesToGo {
-			beePointer := &hive.beesToGo[indexBee]
-			beeImg, beeOpts := drawBee(bee.position.x, bee.position.y)
-			screen.DrawImage(beeImg, beeOpts)
+		for insectType, arrInsects := range hivePointer.insectsToGo {
+			if insectType == Bee {
+				for indexBee, bee := range arrInsects {
+					//TODO can I do it better ?
+					//arrInsects is not updated when we removed an insect, if the indexBee is larger than the arrSize, it means he finished
+					if indexBee >= len(hivePointer.insectsToGo[Bee]) {
+						break
+					}
+					beePointer := &hive.insectsToGo[Bee][indexBee]
+					beeImg, beeOpts := drawBee(bee.position.x, bee.position.y)
+					screen.DrawImage(beeImg, beeOpts)
 
-			if bee.position.x >= hive.position.x+200 {
-				hivePointer.beesToGo = removeBeeNoOrder(hive.beesToGo, indexBee)
-				hivePointer.beesCount--
-				sendDetectionToStream(EuropeanBee, hive.ID, false)
-				continue
+					if bee.position.x >= hive.hiveExit.x+200 {
+						hivePointer.insectsToGo[Bee] = removeBeeNoOrder(hive.insectsToGo[Bee], indexBee)
+						//hivePointer.beesCount--
+						sendDetectionToStream(EuropeanBee, hive.ID, false)
+						continue
+					}
+
+					beePointer.position.x += randomNumberBeetween(0.5, 1.5)
+					beePointer.position.y += randomNumberBeetween(-1.5, 1.5)
+
+				}
 			}
-
-			beePointer.position.x += randomNumberBeetween(0.5, 1.5)
-			beePointer.position.y += randomNumberBeetween(-1.5, 1.5)
-
 		}
 
 		if secondUpdate {
-			beesToCome := make([]Bee, hive.beesToAdd)
+			//bees
+			beesToCome := make([]Insect, hive.beesToAdd)
 			for i := 0; i < hive.beesToAdd; i++ {
-				beesToCome[i] = Bee{
+				beesToCome[i] = Insect{
 					position: coordinate{
 						//x: hive.position.x - 100,
 						x: hive.position.x - randomNumberBeetween(150, 80),
@@ -139,18 +167,20 @@ func (g *Game) Draw(screen *ebiten.Image) {
 					},
 				}
 			}
-			hivePointer.beesToCome = append(hive.beesToCome, beesToCome...)
+			hivePointer.insectsToCome[Bee] = append(hivePointer.insectsToCome[Bee], beesToCome...)
 
-			beesToGo := make([]Bee, hive.beesToRemove)
+			beesToGo := make([]Insect, hive.beesToRemove)
 			for i := 0; i < hive.beesToRemove; i++ {
-				beesToGo[i] = Bee{
+				//we count them at immediatly left from the hive
+				hivePointer.beesCount--
+				beesToGo[i] = Insect{
 					position: coordinate{
-						x: hive.position.x + 30,
-						y: hive.position.y + 30,
+						x: hive.hiveExit.x,
+						y: hive.hiveExit.y,
 					},
 				}
 			}
-			hivePointer.beesToGo = append(hive.beesToGo, beesToGo...)
+			hivePointer.insectsToGo[Bee] = append(hivePointer.insectsToGo[Bee], beesToGo...)
 		}
 
 	}
@@ -162,7 +192,7 @@ func randomNumberBeetween(max, min float64) float64 {
 	//return rand.Intn(max-min) + min
 	return min + rand.Float64()*(max-min)
 }
-func removeBeeNoOrder(bees []Bee, i int) []Bee {
+func removeBeeNoOrder(bees []Insect, i int) []Insect {
 	bees[i] = bees[len(bees)-1]
 	return bees[:len(bees)-1]
 }
@@ -173,10 +203,10 @@ func getRandomNumber() float64 {
 
 func drawBee(x, y float64) (*ebiten.Image, *ebiten.DrawImageOptions) {
 	opChar := &ebiten.DrawImageOptions{}
-	opChar.GeoM.Scale(0.1, 0.1)
+	opChar.GeoM.Scale(0.5, 0.5)
 	opChar.GeoM.Translate(x, y)
 
-	return beeImage.SubImage(image.Rect(0, 0, 432, 432)).(*ebiten.Image), opChar
+	return beeImage.SubImage(image.Rect(0, 0, 32, 32)).(*ebiten.Image), opChar
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -187,21 +217,38 @@ func main() {
 	fmt.Println("go")
 	go kafkabee.Init()
 	go kafkabee.InitConsumer()
+
 	g := &Game{
 		hives: []Hive{
 			{
 				ID: 1,
 				position: coordinate{
-					x: 150,
-					y: 150,
+					x: 100,
+					y: 100,
 				},
 				beesCount:    1000,
-				beesToAdd:    2,
-				beesToRemove: 1,
+				beesToAdd:    5,
+				beesToRemove: 6,
+				hiveEntry: coordinate{
+					x: 152,
+					y: 190,
+				},
+				hiveExit: coordinate{
+					x: 180,
+					y: 190,
+				},
+				insectsToCome: map[InsecType][]Insect{
+					Bee:  make([]Insect, 0),
+					Wasp: make([]Insect, 0),
+				},
+				insectsToGo: map[InsecType][]Insect{
+					Bee:  make([]Insect, 0),
+					Wasp: make([]Insect, 0),
+				},
 			}},
-		mapCenterX:    9,
-		mapCenterY:    6,
-		worldSpeed:    3,
+		mapCenterX: 9,
+		mapCenterY: 6,
+		worldSpeed: 3,
 	}
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
