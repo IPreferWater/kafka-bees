@@ -29,7 +29,7 @@ const (
 var (
 	tilesImage      *ebiten.Image
 	beeImage        *ebiten.Image
-	waspImage        *ebiten.Image
+	waspImage       *ebiten.Image
 	hiveImage       *ebiten.Image
 	mplusNormalFont font.Face
 )
@@ -139,22 +139,49 @@ func (g *Game) Draw(screen *ebiten.Image) {
 					case Approching:
 						waspImg, beeOpts := drawWasp(wasp.position.x, wasp.position.y)
 						screen.DrawImage(waspImg, beeOpts)
-	
+
 						if wasp.position.x >= hive.hiveEntry.x && wasp.position.y >= hive.hiveEntry.y {
-							//hivePointer.insectsToCome[Wasp] = removeBeeNoOrder(hive.insectsToCome[Wasp], indexWasp)
+
 							//TODO it should not send asianwasp but a simple detection
 							waspPointer.waspState = Hunting
 							sendDetectionToStream(AsianWasp, hive.ID, true)
 							continue
 						}
 						getCloserFromHiveForHuntingState(waspPointer, hive.hiveEntry.x, hive.hiveEntry.y)
+
 					case Hunting:
-						// wait for a bee to kill
+						xPosition := randomNumberBeetween(wasp.position.x-1, wasp.position.x+1)
+						yPosition := randomNumberBeetween(wasp.position.y-1, wasp.position.y+1)
+						waspImg, beeOpts := drawWasp(xPosition, yPosition)
+						screen.DrawImage(waspImg, beeOpts)
+
+						for indexBee, bee := range hivePointer.insectsToCome[Bee] {
+
+							// is be in range of the wasp ?
+							if bee.position.x+1 >= xPosition && bee.position.x-1 <= xPosition && bee.position.y+1 <= yPosition && bee.position.y-1 <= yPosition {
+								waspPointer.waspState = Leaving
+								// this bee was killed by this wasp
+								hivePointer.insectsToCome[Bee] = removeBeeNoOrder(hive.insectsToCome[Bee], indexBee)
+							}
+						}
+
 					case Leaving:
-						// go away with bee victim
+
+						waspImg, beeOpts := drawWasp(wasp.position.x, wasp.position.y)
+						screen.DrawImage(waspImg, beeOpts)
+						waspPointer.position.x += randomNumberBeetween(-1, 1)
+						waspPointer.position.y += randomNumberBeetween(0.1, 1)
+
+						beeVictim, beeVictimOpts := drawBee(wasp.position.x+18, wasp.position.y+18)
+						screen.DrawImage(beeVictim, beeVictimOpts)
+
+						if waspPointer.position.y >= hivePointer.hiveEntry.y+200 {
+							hivePointer.insectsToCome[Wasp] = removeBeeNoOrder(hive.insectsToCome[Wasp], indexWasp)
+						}
+
 					default:
 						//do nothing
-					}					
+					}
 
 				}
 			}
@@ -233,10 +260,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f\n", ebiten.CurrentTPS()))
 }
 
-func getCloserFromHive(insectPointer *Insect, hiveEntryX float64, hiveEntryY float64 ){
+func getCloserFromHive(insectPointer *Insect, hiveEntryX float64, hiveEntryY float64) {
 	if insectPointer.position.x <= hiveEntryX {
 		insectPointer.position.x += 0.5
-	}else {
+	} else {
 		insectPointer.position.x -= 0.5
 	}
 
@@ -247,10 +274,10 @@ func getCloserFromHive(insectPointer *Insect, hiveEntryX float64, hiveEntryY flo
 	}
 }
 
-func getCloserFromHiveForHuntingState(insectPointer *Insect, hiveEntryX float64, hiveEntryY float64 ){
+func getCloserFromHiveForHuntingState(insectPointer *Insect, hiveEntryX float64, hiveEntryY float64) {
 	if insectPointer.position.x <= randomNumberBeetween(hiveEntryX-10, hiveEntryX+10) {
 		insectPointer.position.x += randomNumberBeetween(0, 1)
-	}else {
+	} else {
 		insectPointer.position.x -= randomNumberBeetween(0, 1)
 	}
 
@@ -307,9 +334,9 @@ func main() {
 					x: 100,
 					y: 100,
 				},
-				beesCount:    1000,
-				beesToAdd:    5,
-				beesToRemove: 6,
+				beesCount:     1000,
+				beesToAdd:     1,
+				beesToRemove:  1,
 				waspsCount:    0,
 				waspsToAdd:    1,
 				waspsToRemove: 1,
