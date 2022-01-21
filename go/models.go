@@ -14,6 +14,10 @@ type Hive struct {
 	beesCount int
 	beesToAdd int
 	beesToRemove int
+	//TODO create type
+	waspsCount int
+	waspsToAdd int
+	waspsToRemove int
 	//beesToCome []Bee
 	//beesToGo []Bee
 	insectsToCome map[InsecType][]Insect
@@ -24,7 +28,7 @@ type Hive struct {
 
 type Insect struct {
 	position coordinate
-
+	waspState WaspStateType
 }
 
 type InsecType int
@@ -34,6 +38,13 @@ const (
     Wasp
 )
 
+type WaspStateType int
+
+const (
+    Approching WaspStateType = iota
+    Hunting
+	Leaving
+)
 
 type coordinate struct {
 	x float64

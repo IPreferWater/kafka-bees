@@ -29,6 +29,7 @@ const (
 var (
 	tilesImage      *ebiten.Image
 	beeImage        *ebiten.Image
+	waspImage        *ebiten.Image
 	hiveImage       *ebiten.Image
 	mplusNormalFont font.Face
 )
@@ -39,12 +40,19 @@ type cache struct {
 }
 
 func init() {
-	beeCharacterEbitenImage, _, err := ebitenutil.NewImageFromFile("./res/bee.png")
+	beeEbitenImage, _, err := ebitenutil.NewImageFromFile("./res/bee.png")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	beeImage = beeCharacterEbitenImage
+	beeImage = beeEbitenImage
+
+	waspEbitenImage, _, err := ebitenutil.NewImageFromFile("./res/wasp.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	waspImage = waspEbitenImage
 
 	hiveEbitenImage, _, err := ebitenutil.NewImageFromFile("./res/hive.png")
 	if err != nil {
@@ -114,15 +122,39 @@ func (g *Game) Draw(screen *ebiten.Image) {
 						continue
 					}
 
-					if bee.position.x <= hive.hiveEntry.x {
-						beePointer.position.x += 0.5
-					}
+					getCloserFromHive(beePointer, hive.hiveEntry.x, hive.hiveEntry.y)
 
-					if bee.position.y <= hive.hiveEntry.y {
-						beePointer.position.y += randomNumberBeetween(0, 1)
-					} else {
-						beePointer.position.y -= randomNumberBeetween(0, 1)
+				}
+			}
+
+			if insectType == Wasp {
+				for indexWasp, wasp := range arrInsects {
+					//arrInsects is not updated when we removed an insect, if the indexBee is larger than the arrSize, it means he finished
+					if indexWasp >= len(hivePointer.insectsToCome[Wasp]) {
+						break
 					}
+					waspPointer := &hive.insectsToCome[Wasp][indexWasp]
+
+					switch waspPointer.waspState {
+					case Approching:
+						waspImg, beeOpts := drawWasp(wasp.position.x, wasp.position.y)
+						screen.DrawImage(waspImg, beeOpts)
+	
+						if wasp.position.x >= hive.hiveEntry.x && wasp.position.y >= hive.hiveEntry.y {
+							//hivePointer.insectsToCome[Wasp] = removeBeeNoOrder(hive.insectsToCome[Wasp], indexWasp)
+							//TODO it should not send asianwasp but a simple detection
+							waspPointer.waspState = Hunting
+							sendDetectionToStream(AsianWasp, hive.ID, true)
+							continue
+						}
+						getCloserFromHiveForHuntingState(waspPointer, hive.hiveEntry.x, hive.hiveEntry.y)
+					case Hunting:
+						// wait for a bee to kill
+					case Leaving:
+						// go away with bee victim
+					default:
+						//do nothing
+					}					
 
 				}
 			}
@@ -169,6 +201,19 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			}
 			hivePointer.insectsToCome[Bee] = append(hivePointer.insectsToCome[Bee], beesToCome...)
 
+			waspsToCome := make([]Insect, hive.waspsToAdd)
+			for i := 0; i < hive.waspsToAdd; i++ {
+				waspsToCome[i] = Insect{
+					position: coordinate{
+						//x: hive.position.x - 100,
+						x: hive.hiveEntry.x - randomNumberBeetween(-50, 50),
+						y: hive.hiveEntry.y - randomNumberBeetween(200, 220),
+					},
+					waspState: Approching,
+				}
+			}
+			hivePointer.insectsToCome[Wasp] = append(hivePointer.insectsToCome[Wasp], waspsToCome...)
+
 			beesToGo := make([]Insect, hive.beesToRemove)
 			for i := 0; i < hive.beesToRemove; i++ {
 				//we count them at immediatly left from the hive
@@ -186,6 +231,34 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f\n", ebiten.CurrentTPS()))
+}
+
+func getCloserFromHive(insectPointer *Insect, hiveEntryX float64, hiveEntryY float64 ){
+	if insectPointer.position.x <= hiveEntryX {
+		insectPointer.position.x += 0.5
+	}else {
+		insectPointer.position.x -= 0.5
+	}
+
+	if insectPointer.position.y <= hiveEntryY {
+		insectPointer.position.y += randomNumberBeetween(0, 1)
+	} else {
+		insectPointer.position.y -= randomNumberBeetween(0, 1)
+	}
+}
+
+func getCloserFromHiveForHuntingState(insectPointer *Insect, hiveEntryX float64, hiveEntryY float64 ){
+	if insectPointer.position.x <= randomNumberBeetween(hiveEntryX-10, hiveEntryX+10) {
+		insectPointer.position.x += randomNumberBeetween(0, 1)
+	}else {
+		insectPointer.position.x -= randomNumberBeetween(0, 1)
+	}
+
+	if insectPointer.position.y <= hiveEntryY {
+		insectPointer.position.y += 0.5
+	} else {
+		insectPointer.position.y -= 0.5
+	}
 }
 
 func randomNumberBeetween(max, min float64) float64 {
@@ -209,6 +282,14 @@ func drawBee(x, y float64) (*ebiten.Image, *ebiten.DrawImageOptions) {
 	return beeImage.SubImage(image.Rect(0, 0, 32, 32)).(*ebiten.Image), opChar
 }
 
+func drawWasp(x, y float64) (*ebiten.Image, *ebiten.DrawImageOptions) {
+	opChar := &ebiten.DrawImageOptions{}
+	opChar.GeoM.Scale(1.2, 1.2)
+	opChar.GeoM.Translate(x, y)
+
+	return waspImage.SubImage(image.Rect(0, 0, 32, 32)).(*ebiten.Image), opChar
+}
+
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return screenWidth, screenHeight
 }
@@ -229,6 +310,9 @@ func main() {
 				beesCount:    1000,
 				beesToAdd:    5,
 				beesToRemove: 6,
+				waspsCount:    0,
+				waspsToAdd:    1,
+				waspsToRemove: 1,
 				hiveEntry: coordinate{
 					x: 152,
 					y: 190,
