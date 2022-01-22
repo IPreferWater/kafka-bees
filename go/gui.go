@@ -258,15 +258,14 @@ func (g *Game) Draw(screen *ebiten.Image) {
 						waspImg, beeOpts := drawWasp(xPosition, yPosition)
 						screen.DrawImage(waspImg, beeOpts)
 
-						for indexBee, bee := range hivePointer.insectsToCome[Bee] {
+						indexBee := getInsectInRange(hivePointer.insectsToCome[Bee], xPosition, yPosition, 16)
 
-							// is be in range of the wasp ?
-							if bee.position.x+1 >= xPosition && bee.position.x-1 <= xPosition && bee.position.y+1 <= yPosition && bee.position.y-1 <= yPosition {
-								waspPointer.waspState = Leaving
-								// this bee was killed by this wasp
-								hivePointer.insectsToCome[Bee] = removeBeeNoOrder(hive.insectsToCome[Bee], indexBee)
-							}
+						if indexBee == -1 {
+							break
 						}
+
+						waspPointer.waspState = Leaving
+						hivePointer.insectsToCome[Bee] = removeBeeNoOrder(hive.insectsToCome[Bee], indexBee)
 
 					case Leaving:
 
@@ -362,4 +361,20 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f\n", ebiten.CurrentTPS()))
+}
+
+// return -1 if nothing found
+func getInsectInRange(arr []Insect, x, y, rangeInsect float64) int {
+
+	for indexInsect, i := range arr {
+
+		// is be in range of the wasp ?
+		if i.position.x+rangeInsect >= x && i.position.x-rangeInsect <= x && i.position.y+rangeInsect >= y && i.position.y-rangeInsect <= y {
+			//waspPointer.waspState = Leaving
+			// this bee was killed by this wasp
+			//hivePointer.insectsToCome[Bee] = removeBeeNoOrder(hive.insectsToCome[Bee], indexBee)
+			return indexInsect
+		}
+	}
+	return -1
 }

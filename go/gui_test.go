@@ -58,3 +58,40 @@ func TestGetNumberOfTilesToDraw(t *testing.T){
 		t.Errorf("expected x:%d and y:%d but got x: %d y : %d \n", xExpected, yExpected, xGot, yGot)
 	}
 }
+
+func TestGetBeeIndexToBeKilled(t *testing.T){
+	arr := []Insect{
+{
+	position:  coordinate{
+		x: 110,
+		y: 120,
+	},
+},
+{
+	position:  coordinate{
+		x: 160,
+		y: 170,
+	},
+},
+	}
+	expected := 1
+	got := getInsectInRange(arr,155,165,5)
+
+	if expected != got {
+		t.Errorf("expected index %d but got %d", expected, got)
+	}
+
+	expected = 1
+	got = getInsectInRange(arr,164,174,5)
+
+	if expected != got {
+		t.Errorf("expected index %d but got %d", expected, got)
+	}
+
+	expected = -1
+	got = getInsectInRange(arr,164,176,5)
+
+	if expected != got {
+		t.Errorf("expected index %d but got %d", expected, got)
+	}
+}
