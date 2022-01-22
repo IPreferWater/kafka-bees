@@ -105,27 +105,29 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func drawBackGround(screen *ebiten.Image) {
-	fmt.Println("draw grass")
 	grass, optGrass := drawBgTiles(0, 0, bgPixel.grass)
-	x,y := getNumberOfTilesToDraw(screenWidth, screenHeight, 64)
-
-	for i :=0; i<=x;i++ {
-		for j:=0; j<=y; j++ {
-			
+	x, y := getNumberOfTilesToDraw(screenWidth, screenHeight, 64)
+	screen.DrawImage(grass, optGrass)
+	for j := 0; j <= y; j++ {
+		optGrass.GeoM.Translate(0, float64(j*64))
+		//draw the first tile at x=0
+		screen.DrawImage(grass, optGrass)
+		for i := 0; i <= x; i++ {
+			optGrass.GeoM.Translate(64, 0)
+			screen.DrawImage(grass, optGrass)
 		}
+		optGrass.GeoM.Reset()
+		optGrass.GeoM.Scale(2, 2)
 	}
-	screen.DrawImage(grass, optGrass)
-	optGrass.GeoM.Translate(10,64)
-	screen.DrawImage(grass, optGrass)
 }
 
-func getNumberOfTilesToDraw(w,h,tileSize int) (int,int){
-	return divideAndRoundUp(w,tileSize),divideAndRoundUp(h,tileSize)
+func getNumberOfTilesToDraw(w, h, tileSize int) (int, int) {
+	return divideAndRoundUp(w, tileSize), divideAndRoundUp(h, tileSize)
 }
 
-func divideAndRoundUp(a,b int) int{
-	res:=a/b
-	if a%b >0 {
+func divideAndRoundUp(a, b int) int {
+	res := a / b
+	if a%b > 0 {
 		res++
 	}
 	return res
