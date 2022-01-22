@@ -16,17 +16,28 @@ import (
 )
 
 var (
-	tilesImage      *ebiten.Image
 	beeImage        *ebiten.Image
 	waspImage       *ebiten.Image
 	hiveImage       *ebiten.Image
 	mplusNormalFont font.Face
+	bgPixel         background
 )
 
 const (
 	screenWidth  = 1024
 	screenHeight = 600
 )
+
+type background struct {
+	img        *ebiten.Image
+	tree       pixelImage
+	grass      pixelImage
+	littleTree pixelImage
+}
+
+type pixelImage struct {
+	x1, y1, x2, y2 int
+}
 
 type Game struct {
 	hives      []Hive
@@ -94,16 +105,38 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func drawBackGround(screen *ebiten.Image) {
-	grass, optGrass := drawGrass(0, 0)
+	fmt.Println("draw grass")
+	grass, optGrass := drawBgTiles(0, 0, bgPixel.grass)
+	x,y := getNumberOfTilesToDraw(screenWidth, screenHeight, 64)
+
+	for i :=0; i<=x;i++ {
+		for j:=0; j<=y; j++ {
+			
+		}
+	}
+	screen.DrawImage(grass, optGrass)
+	optGrass.GeoM.Translate(10,64)
 	screen.DrawImage(grass, optGrass)
 }
 
-func drawGrass(x, y float64) (*ebiten.Image, *ebiten.DrawImageOptions) {
-	opChar := &ebiten.DrawImageOptions{}
-	opChar.GeoM.Scale(3, 3)
-	//opChar.GeoM.Translate(x, y)
+func getNumberOfTilesToDraw(w,h,tileSize int) (int,int){
+	return divideAndRoundUp(w,tileSize),divideAndRoundUp(h,tileSize)
+}
 
-	return tilesImage.SubImage(image.Rect(0, 130, 120, 160)).(*ebiten.Image), opChar
+func divideAndRoundUp(a,b int) int{
+	res:=a/b
+	if a%b >0 {
+		res++
+	}
+	return res
+}
+
+func drawBgTiles(x, y float64, pxI pixelImage) (*ebiten.Image, *ebiten.DrawImageOptions) {
+	opChar := &ebiten.DrawImageOptions{}
+	opChar.GeoM.Scale(2, 2)
+	opChar.GeoM.Translate(x, y)
+	//return bgPixel.img.SubImage(image.Rect(0, 0, 32, 32)).(*ebiten.Image), opChar
+	return bgPixel.img.SubImage(image.Rect(pxI.x1, pxI.y1, pxI.x2, pxI.y2)).(*ebiten.Image), opChar
 }
 
 func (g *Game) Update() error {
@@ -140,8 +173,14 @@ func init() {
 		Hinting: font.HintingFull,
 	})
 
-	tilesEbitenImage, _, err := ebitenutil.NewImageFromFile("./res/tiles/trees-and-bushes.png")
-	tilesImage = tilesEbitenImage
+	backgroundEbitenImage, _, err := ebitenutil.NewImageFromFile("./res/tiles/trees-and-bushes.png")
+
+	bgPixel = background{
+		img:        backgroundEbitenImage,
+		tree:       pixelImage{0, 0, 64, 64},
+		grass:      pixelImage{0, 96, 32, 128},
+		littleTree: pixelImage{0, 64, 32, 96},
+	}
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
@@ -248,7 +287,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 				}
 			}
-
 
 		}
 
