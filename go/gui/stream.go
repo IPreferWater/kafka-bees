@@ -1,4 +1,4 @@
-package main
+package gui
 
 import (
 	"github.com/ipreferwater/kafka-bees/kafkabee"

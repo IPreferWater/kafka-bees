@@ -1,4 +1,4 @@
-package main
+package gui
 
 type Hive struct {
 	ID int

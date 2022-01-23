@@ -1,4 +1,4 @@
-package main
+package gui
 
 import (
 	"fmt"
@@ -45,6 +45,80 @@ type Game struct {
 	mapCenterY float64
 	worldSpeed float64
 	frame      int
+}
+
+func StartEbiten() {
+	g := &Game{
+		hives: []Hive{
+			{
+				ID: 1,
+				position: coordinate{
+					x: 100,
+					y: 100,
+				},
+				beesCount:     1000,
+				beesToAdd:     20,
+				beesToRemove:  2,
+				waspsCount:    0,
+				waspsToAdd:    1,
+				waspsToRemove: 1,
+				hiveEntry: coordinate{
+					x: 152,
+					y: 190,
+				},
+				hiveExit: coordinate{
+					x: 180,
+					y: 190,
+				},
+				insectsToCome: map[InsecType][]Insect{
+					Bee:  make([]Insect, 0),
+					Wasp: make([]Insect, 0),
+				},
+				insectsToGo: map[InsecType][]Insect{
+					Bee:  make([]Insect, 0),
+					Wasp: make([]Insect, 0),
+				},
+			},
+			{
+				ID: 2,
+				position: coordinate{
+					x: 400,
+					y: 100,
+				},
+				beesCount:     1000,
+				beesToAdd:     20,
+				beesToRemove:  2,
+				waspsCount:    0,
+				waspsToAdd:    1,
+				waspsToRemove: 1,
+				hiveEntry: coordinate{
+					x: 452,
+					y: 190,
+				},
+				hiveExit: coordinate{
+					x: 480,
+					y: 190,
+				},
+				insectsToCome: map[InsecType][]Insect{
+					Bee:  make([]Insect, 0),
+					Wasp: make([]Insect, 0),
+				},
+				insectsToGo: map[InsecType][]Insect{
+					Bee:  make([]Insect, 0),
+					Wasp: make([]Insect, 0),
+				},
+			},
+		},
+		mapCenterX: 9,
+		mapCenterY: 6,
+		worldSpeed: 3,
+	}
+
+	ebiten.SetWindowSize(screenWidth, screenHeight)
+	ebiten.SetWindowTitle("Bees-World")
+	if err := ebiten.RunGame(g); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func getCloserFromHive(insectPointer *Insect, hiveEntryX float64, hiveEntryY float64) {
@@ -94,7 +168,7 @@ func drawBee(x, y float64) (*ebiten.Image, *ebiten.DrawImageOptions) {
 
 func drawWasp(x, y float64) (*ebiten.Image, *ebiten.DrawImageOptions) {
 	opChar := &ebiten.DrawImageOptions{}
-	opChar.GeoM.Scale(1.2, 1.2)
+	opChar.GeoM.Scale(0.8, 0.8)
 	opChar.GeoM.Translate(x, y)
 
 	return waspImage.SubImage(image.Rect(0, 0, 32, 32)).(*ebiten.Image), opChar
@@ -274,7 +348,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 						waspPointer.position.x += randomNumberBeetween(-1, 1)
 						waspPointer.position.y += randomNumberBeetween(0.1, 1)
 
-						beeVictim, beeVictimOpts := drawBee(wasp.position.x+18, wasp.position.y+18)
+						beeVictim, beeVictimOpts := drawBee(wasp.position.x+8, wasp.position.y+12)
 						screen.DrawImage(beeVictim, beeVictimOpts)
 
 						if waspPointer.position.y >= hivePointer.hiveEntry.y+200 {

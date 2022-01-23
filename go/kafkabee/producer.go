@@ -49,12 +49,10 @@ func Init() error {
 		kafkaConfigMap.SetKey("ssl.key.location", conf.pathServiceKey)
 	}
 
-	fmt.Println("0")
 	p, err := kafka.NewProducer(kafkaConfigMap)
 	if err != nil {
-		return(fmt.Errorf("error creating producer %s", err))
+		return (fmt.Errorf("error creating producer %s", err))
 	}
-	fmt.Println("1")
 
 	// this will check the status of the sent messages
 	/*go func() {

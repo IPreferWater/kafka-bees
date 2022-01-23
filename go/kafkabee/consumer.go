@@ -28,7 +28,7 @@ func InitConsumer() error {
 
 	c, err := kafka.NewConsumer(kafkaConfigMap)
 	if err != nil {
-		return(fmt.Errorf("can't create consumer %s", err))
+		return (fmt.Errorf("can't create consumer %s", err))
 	}
 
 	err = c.SubscribeTopics([]string{conf.topic}, nil)
@@ -38,7 +38,7 @@ func InitConsumer() error {
 	for {
 		msg, err := c.ReadMessage(-1)
 		if err != nil {
-			return(fmt.Errorf("error readin msg %s\n", err))
+			return (fmt.Errorf("error readin msg %s\n", err))
 		}
 
 		//value
@@ -83,14 +83,4 @@ func InitConsumer() error {
 
 }
 
-func guess(v DataValue, k DataKey) {
-	if isEuropeanBee(v){
-		fmt.Println("go send europeanBee")
-		eB := europeanBee{
-			HiveID:    k.HiveID,
-			Size:      int(v.Size),
-			Direction: k.Direction,
-		}
-		Stream.ProduceEuropeanBee(eB)
-	}
-}
+
