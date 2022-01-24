@@ -14,7 +14,15 @@ func guess(v DataValue, k DataKey) {
 	}
 
 	if isAsianWasp(v) {
-		fmt.Printf("send alert asian wasp on hiveID %d\n", k.HiveID)
+		direction := func (b bool) string{
+			if b {
+				return "has arrived"
+			}
+			return "is leaving"
+		}
+
+
+		fmt.Printf("send alert asian wasp %s on hiveID %d\n", direction(k.Direction), k.HiveID)
 	}
 }
 

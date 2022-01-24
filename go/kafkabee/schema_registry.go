@@ -40,7 +40,6 @@ func getValueByte(schema *srclient.Schema, toMarshall interface{}) ([]byte, erro
 	schemaIDBytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(schemaIDBytes, uint32(schema.ID()))
 
-
 	var recordValue []byte
 	//add kafka magic byte
 	recordValue = append(recordValue, byte(0))
@@ -53,4 +52,62 @@ func getValueByte(schema *srclient.Schema, toMarshall interface{}) ([]byte, erro
 	}
 
 	return valueBytes, nil
+}
+
+//TODO duplicated code
+func decodeDataValueFromSchema(b []byte, scClient *srclient.SchemaRegistryClient) (DataValue, error){
+	detectedValue := DataValue{}
+
+	byteValue, err := decodeFromSchema(b, scClient)
+	if err != nil {
+		return detectedValue, err
+	}
+	
+	// unmarshall json to given pointer
+	if err := json.Unmarshal(byteValue, &detectedValue); err != nil {
+		return detectedValue, fmt.Errorf("error unmarshall the value %s to the given pointer => %s", string(byteValue), err)
+	}
+	return detectedValue, nil
+}
+
+func decodeDataKeyFromSchema(b []byte, scClient *srclient.SchemaRegistryClient) (DataKey, error){
+	detectedKey := DataKey{}
+
+	byteKey, err := decodeFromSchema(b, scClient)
+	if err != nil {
+		return detectedKey, err
+	}
+	
+	// unmarshall json to given pointer
+	if err := json.Unmarshal(byteKey, &detectedKey); err != nil {
+		return detectedKey, fmt.Errorf("error unmarshall the value %s to the given pointer => %s", string(byteKey), err)
+	}
+	return detectedKey, nil
+}
+
+func decodeFromSchema(valueB []byte, scClient *srclient.SchemaRegistryClient) ([]byte, error) {
+	// extract schemaID from the message
+	schemaID := binary.BigEndian.Uint32(valueB[1:5])
+
+	// retrieve schema via ID in schema-registry
+	schema, err := scClient.GetSchema(int(schemaID))
+
+	if err != nil {
+		return nil, fmt.Errorf("Error getting the schema with id '%d' %s", schemaID, err)
+	}
+
+	// []binary to Datum format
+	native, _, err := schema.Codec().NativeFromBinary(valueB[5:])
+	if err != nil {
+		return nil, fmt.Errorf("Error binary to Datum =>  %s", err)
+	}
+
+	// Datum to json format
+	json, err := schema.Codec().TextualFromNative(nil, native)
+	if err != nil {
+		return nil, fmt.Errorf("Error Datum to json => %s", err)
+	}
+
+	return json, nil
+
 }

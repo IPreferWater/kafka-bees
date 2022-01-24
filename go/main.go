@@ -15,7 +15,10 @@ func main() {
 	if err := kafkabee.Init(); err != nil {
 		log.Fatal(err)
 	}
-	//go kafkabee.InitConsumer()
+
+	if err := kafkabee.InitConsumer(); err != nil {
+		log.Fatal(err)
+	}
 
 	gui.StartEbiten()
 }

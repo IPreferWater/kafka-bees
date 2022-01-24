@@ -93,13 +93,7 @@ func Init() error {
 		europeanBeeSchema: europeanBeeSchema,
 		config:            conf,
 	}
-
-	fmt.Println(conf)
-	fmt.Println(conf.topic)
-	fmt.Println("kafka OK")
-
 	return nil
-
 }
 
 func (k KafkaStreaming) Produce(d Data) error {
@@ -113,7 +107,7 @@ func (k KafkaStreaming) Produce(d Data) error {
 		return err
 	}
 
-	errProduce := k.producer.Produce(
+	return k.producer.Produce(
 		&kafka.Message{
 			TopicPartition: kafka.TopicPartition{
 				Topic:     &k.config.topic,
@@ -123,12 +117,6 @@ func (k KafkaStreaming) Produce(d Data) error {
 			Key:   recordKey,
 		}, nil,
 	)
-
-	if errProduce != nil {
-		panic(fmt.Sprintf("errProduce %s", errProduce))
-	}
-
-	return nil
 }
 
 func (k KafkaStreaming) ProduceEuropeanBee(eB europeanBee) error {
@@ -137,9 +125,8 @@ func (k KafkaStreaming) ProduceEuropeanBee(eB europeanBee) error {
 	if err != nil {
 		return err
 	}
-	//recordKey := getValueByte(k.keySchema, d.DataKey)
 
-	errProduce := k.producer.Produce(
+	return k.producer.Produce(
 		&kafka.Message{
 			TopicPartition: kafka.TopicPartition{
 				Topic:     &k.config.topicEuropeanBee,
@@ -149,12 +136,6 @@ func (k KafkaStreaming) ProduceEuropeanBee(eB europeanBee) error {
 			Key:   []byte(fmt.Sprintf("%d", eB.HiveID)),
 		}, nil,
 	)
-
-	if errProduce != nil {
-		panic(fmt.Sprintf("errProduce %s", errProduce))
-	}
-
-	return nil
 }
 
 func getConfig() kafkaConfig {

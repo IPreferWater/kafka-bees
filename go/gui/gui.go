@@ -340,6 +340,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 						waspPointer.waspState = Leaving
 						hivePointer.insectsToCome[Bee] = removeBeeNoOrder(hive.insectsToCome[Bee], indexBee)
+						sendDetectionToStream(Wasp, hive.ID, false)
 
 					case Leaving:
 
@@ -352,7 +353,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 						screen.DrawImage(beeVictim, beeVictimOpts)
 
 						if waspPointer.position.y >= hivePointer.hiveEntry.y+200 {
-							sendDetectionToStream(Wasp, hive.ID, false)
 							hivePointer.insectsToCome[Wasp] = removeBeeNoOrder(hive.insectsToCome[Wasp], indexWasp)
 						}
 

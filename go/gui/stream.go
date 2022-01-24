@@ -20,7 +20,7 @@ func sendDetectionToStream(t InsecType, hiveID int, direction bool) {
 	}
 
 	if t == Wasp {
-		kafkabee.Stream.Produce(fakeBee(hiveID, true))
+		kafkabee.Stream.Produce(fakeAsianWasp(hiveID, direction))
 	}
 }
 
