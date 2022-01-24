@@ -47,68 +47,62 @@ type Game struct {
 	frame      int
 }
 
-func StartEbiten() {
-	g := &Game{
-		hives: []Hive{
-			{
-				ID: 1,
-				position: coordinate{
-					x: 100,
-					y: 100,
-				},
-				beesCount:     1000,
-				beesToAdd:     20,
-				beesToRemove:  2,
-				waspsCount:    0,
-				waspsToAdd:    1,
-				waspsToRemove: 1,
-				hiveEntry: coordinate{
-					x: 152,
-					y: 190,
-				},
-				hiveExit: coordinate{
-					x: 180,
-					y: 190,
-				},
-				insectsToCome: map[InsecType][]Insect{
-					Bee:  make([]Insect, 0),
-					Wasp: make([]Insect, 0),
-				},
-				insectsToGo: map[InsecType][]Insect{
-					Bee:  make([]Insect, 0),
-					Wasp: make([]Insect, 0),
-				},
-			},
-			{
-				ID: 2,
-				position: coordinate{
-					x: 400,
-					y: 100,
-				},
-				beesCount:     1000,
-				beesToAdd:     20,
-				beesToRemove:  2,
-				waspsCount:    0,
-				waspsToAdd:    1,
-				waspsToRemove: 1,
-				hiveEntry: coordinate{
-					x: 452,
-					y: 190,
-				},
-				hiveExit: coordinate{
-					x: 480,
-					y: 190,
-				},
-				insectsToCome: map[InsecType][]Insect{
-					Bee:  make([]Insect, 0),
-					Wasp: make([]Insect, 0),
-				},
-				insectsToGo: map[InsecType][]Insect{
-					Bee:  make([]Insect, 0),
-					Wasp: make([]Insect, 0),
-				},
-			},
+func createNewHive(id, beesToAdd, beesToRemove int, x, y float64)Hive{
+
+	hiveEntryX, hiveEntryY := x+52, y+90
+	hiveExitX, hiveExitY := x+80, y+90
+	return Hive{
+		ID:            id,
+		position:      coordinate{
+			x: x,
+			y: y,
 		},
+		beesCount:     1000,
+		beesToAdd:     beesToAdd,
+		beesToRemove:  beesToRemove,
+		waspsCount:    0,
+		waspsToAdd:    1,
+		beesKilled:    0,
+		insectsToCome: map[InsecType][]Insect{},
+		insectsToGo:   map[InsecType][]Insect{},
+		hiveEntry:     coordinate{
+			x: hiveEntryX,
+			y: hiveEntryY,
+		},
+		hiveExit:      coordinate{
+			x: hiveExitX,
+			y: hiveExitY,
+		},
+	}
+
+}
+func StartEbiten() {
+	hivesCoordinates := [4]coordinate{
+		{
+			x: 160,
+			y: 100,
+		},
+		{
+			x: 680,
+			y: 100,
+		},
+		{
+			x: 160,
+			y: 340,
+		},
+		{
+			x: 680,
+			y: 340,
+		},
+	}
+
+	hives := make([]Hive, 4)
+
+	for index, c := range hivesCoordinates {
+		hives[index] = createNewHive(index+1,2,1, c.x, c.y)
+	}
+	g := &Game{
+		hives: hives,
 		mapCenterX: 9,
 		mapCenterY: 6,
 		worldSpeed: 3,
@@ -123,7 +117,12 @@ func StartEbiten() {
 
 func getCloserFromHive(insectPointer *Insect, hiveEntryX float64, hiveEntryY float64) {
 	if insectPointer.position.x <= hiveEntryX {
-		insectPointer.position.x += 0.5
+
+		if hiveEntryY - insectPointer.position.y <5 {
+			insectPointer.position.x += 1.0
+		}else {
+			insectPointer.position.x += 0.5
+		}
 	} else {
 		insectPointer.position.x -= 0.5
 	}
@@ -143,9 +142,9 @@ func getCloserFromHiveForHuntingState(insectPointer *Insect, hiveEntryX float64,
 	}
 
 	if insectPointer.position.y <= hiveEntryY {
-		insectPointer.position.y += 0.5
+		insectPointer.position.y +=  randomNumberBeetween(0, 1)
 	} else {
-		insectPointer.position.y -= 0.5
+		insectPointer.position.y -=  randomNumberBeetween(0, 1)
 	}
 }
 
@@ -399,7 +398,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 					position: coordinate{
 						//x: hive.position.x - 100,
 						x: hive.position.x - randomNumberBeetween(150, 80),
-						y: float64(randomNumberBeetween(300, hive.position.y-150)),
+						y: float64(randomNumberBeetween(hive.position.y+300, hive.position.y-150)),
 					},
 				}
 			}
@@ -411,7 +410,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 					position: coordinate{
 						//x: hive.position.x - 100,
 						x: hive.hiveEntry.x - randomNumberBeetween(-50, 50),
-						y: hive.hiveEntry.y - randomNumberBeetween(200, 220),
+						y: hive.hiveEntry.y - randomNumberBeetween(160, 180),
 					},
 					waspState: Approching,
 				}

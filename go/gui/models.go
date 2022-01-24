@@ -9,7 +9,7 @@ type Hive struct {
 	//TODO create type
 	waspsCount int
 	waspsToAdd int
-	waspsToRemove int
+	beesKilled int
 	//beesToCome []Bee
 	//beesToGo []Bee
 	insectsToCome map[InsecType][]Insect
