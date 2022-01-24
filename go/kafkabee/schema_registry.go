@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 
 	"github.com/riferrei/srclient"
 )
@@ -12,40 +11,36 @@ import (
 func getSchema(client *srclient.SchemaRegistryClient, schemaName string) (*srclient.Schema, error) {
 	schema, err := client.GetLatestSchema(schemaName)
 	if err != nil {
-		return nil, fmt.Errorf("error getLatestSchema %s", err)
+		return nil, fmt.Errorf("error getting latestSchema %s => %s", schemaName, err)
 	}
 
-	fmt.Printf("get latest %s id = %d\n", schemaName, schema.ID())
 	if schema == nil {
-		//TODO I need to check this part
-		fmt.Printf("schema %s is nil !\n", schemaName)
-		schemaBytes, errReadFile := ioutil.ReadFile("complexType.avsc")
-		if errReadFile != nil {
-			return nil, fmt.Errorf("error read file %s", errReadFile)
-		}
-		schema, err = client.CreateSchema(schemaName, string(schemaBytes), srclient.Avro)
-		if err != nil {
-			return nil, fmt.Errorf("Error creating the schema %s", err)
-		}
+		return nil, fmt.Errorf("schema %s doesn't exist => %s", schemaName, err)
 	}
 
 	return schema, nil
 }
 
-func getValueByte(schema *srclient.Schema, toMarshall interface{}) []byte {
+// transform interface to an array of bytes with the avro schema
+func getValueByte(schema *srclient.Schema, toMarshall interface{}) ([]byte, error) {
 
+	// in kafka, the 4 first bytes stock the schemaID to be retrieved with the schema-registry
 	schemaIDBytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(schemaIDBytes, uint32(schema.ID()))
 
+	//get a json format
 	value, errJ := json.Marshal(toMarshall)
 	if errJ != nil {
-		panic(fmt.Sprintf("err jsonMarshall %s", errJ))
+		return nil, fmt.Errorf("error transform %s to json with marshal => %s", toMarshall, errJ)
 	}
 
+	//json to Datum format
 	native, _, err := schema.Codec().NativeFromTextual(value)
 	if err != nil {
-		panic(fmt.Sprintf("err NativeFromTextual %s toMarshall %s\n", err, value))
+		return nil, fmt.Errorf("error transforming json Data %s to Datum with the provided schema => %s",value, err)
 	}
+
+
 	valueBytes, err := schema.Codec().BinaryFromNative(nil, native)
 
 	if err != nil {
@@ -57,5 +52,5 @@ func getValueByte(schema *srclient.Schema, toMarshall interface{}) []byte {
 	recordValue = append(recordValue, schemaIDBytes...)
 	recordValue = append(recordValue, valueBytes...)
 
-	return recordValue
+	return recordValue, nil
 }

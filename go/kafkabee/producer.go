@@ -104,8 +104,14 @@ func Init() error {
 
 func (k KafkaStreaming) Produce(d Data) error {
 
-	recordValue := getValueByte(k.valueSchema, d.DataValue)
-	recordKey := getValueByte(k.keySchema, d.DataKey)
+	recordValue, err := getValueByte(k.valueSchema, d.DataValue)
+	if err != nil {
+		return err
+	}
+	recordKey, err := getValueByte(k.keySchema, d.DataKey)
+	if err != nil {
+		return err
+	}
 
 	errProduce := k.producer.Produce(
 		&kafka.Message{
@@ -127,7 +133,10 @@ func (k KafkaStreaming) Produce(d Data) error {
 
 func (k KafkaStreaming) ProduceEuropeanBee(eB europeanBee) error {
 
-	v := getValueByte(k.europeanBeeSchema, eB)
+	v,err := getValueByte(k.europeanBeeSchema, eB)
+	if err != nil {
+		return err
+	}
 	//recordKey := getValueByte(k.keySchema, d.DataKey)
 
 	errProduce := k.producer.Produce(
