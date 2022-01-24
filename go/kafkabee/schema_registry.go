@@ -24,10 +24,6 @@ func getSchema(client *srclient.SchemaRegistryClient, schemaName string) (*srcli
 // transform interface to an array of bytes with the avro schema
 func getValueByte(schema *srclient.Schema, toMarshall interface{}) ([]byte, error) {
 
-	// in kafka, the 4 first bytes stock the schemaID to be retrieved with the schema-registry
-	schemaIDBytes := make([]byte, 4)
-	binary.BigEndian.PutUint32(schemaIDBytes, uint32(schema.ID()))
-
 	//get a json format
 	value, errJ := json.Marshal(toMarshall)
 	if errJ != nil {
@@ -37,20 +33,24 @@ func getValueByte(schema *srclient.Schema, toMarshall interface{}) ([]byte, erro
 	//json to Datum format
 	native, _, err := schema.Codec().NativeFromTextual(value)
 	if err != nil {
-		return nil, fmt.Errorf("error transforming json Data %s to Datum with the provided schema => %s",value, err)
+		return nil, fmt.Errorf("error transforming json Data %s to Datum with the provided schema => %s", value, err)
 	}
 
+	// in kafka, the 4 first bytes stock the schemaID to be retrieved with the schema-registry
+	schemaIDBytes := make([]byte, 4)
+	binary.BigEndian.PutUint32(schemaIDBytes, uint32(schema.ID()))
 
-	valueBytes, err := schema.Codec().BinaryFromNative(nil, native)
-
-	if err != nil {
-		panic(fmt.Sprintf("err BinaryFromNative %s", err))
-	}
 
 	var recordValue []byte
+	//add kafka magic byte
 	recordValue = append(recordValue, byte(0))
 	recordValue = append(recordValue, schemaIDBytes...)
-	recordValue = append(recordValue, valueBytes...)
 
-	return recordValue, nil
+	valueBytes, err := schema.Codec().BinaryFromNative(recordValue, native)
+
+	if err != nil {
+		return nil, fmt.Errorf("error transforming Datum to []bytes with the provided schema => %s", err)
+	}
+
+	return valueBytes, nil
 }
