@@ -54,7 +54,7 @@ func Init() error {
 		return (fmt.Errorf("error creating producer %s", err))
 	}
 
-	// this will check the status of the sent messages
+	// uncomment to check the status of the produced messages
 	/*go func() {
 		for event := range p.Events() {
 			switch ev := event.(type) {
@@ -68,7 +68,7 @@ func Init() error {
 			}
 		}
 	}()
-	//defer p.Close()*/
+	*/
 
 	schemaRegistryClient := srclient.CreateSchemaRegistryClient(conf.schemaRegistryUrl)
 
@@ -98,11 +98,11 @@ func Init() error {
 
 func (k KafkaStreaming) Produce(d Data) error {
 
-	recordValue, err := getValueByte(k.valueSchema, d.DataValue)
+	recordValue, err := encodeDataFromSchema(k.valueSchema, d.DataValue)
 	if err != nil {
 		return err
 	}
-	recordKey, err := getValueByte(k.keySchema, d.DataKey)
+	recordKey, err := encodeDataFromSchema(k.keySchema, d.DataKey)
 	if err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func (k KafkaStreaming) Produce(d Data) error {
 
 func (k KafkaStreaming) ProduceEuropeanBee(eB europeanBee) error {
 
-	v,err := getValueByte(k.europeanBeeSchema, eB)
+	v,err := encodeDataFromSchema(k.europeanBeeSchema, eB)
 	if err != nil {
 		return err
 	}
@@ -143,6 +143,7 @@ func getConfig() kafkaConfig {
 		kafkaUrl:                   "localhost:29092",
 		schemaRegistryUrl:          "http://localhost:8081",
 		securityProtocol:           "PLAINTEXT",
+		// if you have ssl config, this is where you put your authentication files
 		pathCaPem:                  "",
 		pathServiceCert:            "",
 		pathServiceKey:             "",

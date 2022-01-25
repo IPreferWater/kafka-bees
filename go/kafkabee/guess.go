@@ -2,6 +2,7 @@ package kafkabee
 
 import "fmt"
 
+// guess will try to find wich kind of insect it is and do the expected work
 func guess(v DataValue, k DataKey) {
 	if isEuropeanBee(v) {
 		eB := europeanBee{

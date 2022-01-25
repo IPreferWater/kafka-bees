@@ -1,5 +1,6 @@
 package kafkabee
 
+// the combined Value & Key read from the topic detected
 type Data struct {
 	DataValue
 	DataKey
@@ -16,6 +17,7 @@ type DataKey struct {
 	Direction bool `json:"direction"`
 }
 
+// structure to send to topic european-bee
 type europeanBee struct {
 	HiveID    int  `json:"hive_id"`
 	Size      int  `json:"size"`

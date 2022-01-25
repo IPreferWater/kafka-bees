@@ -22,7 +22,7 @@ func getSchema(client *srclient.SchemaRegistryClient, schemaName string) (*srcli
 }
 
 // transform interface to an array of bytes with the avro schema
-func getValueByte(schema *srclient.Schema, toMarshall interface{}) ([]byte, error) {
+func encodeDataFromSchema(schema *srclient.Schema, toMarshall interface{}) ([]byte, error) {
 
 	//get a json format
 	value, errJ := json.Marshal(toMarshall)
