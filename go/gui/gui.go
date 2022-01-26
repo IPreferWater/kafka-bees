@@ -20,7 +20,6 @@ var (
 	waspImage       *ebiten.Image
 	hiveImage       *ebiten.Image
 	mplusNormalFont font.Face
-	bgPixel         background
 )
 
 const (
@@ -28,16 +27,9 @@ const (
 	screenHeight = 600
 )
 
-type background struct {
-	img        *ebiten.Image
-	tree       pixelImage
-	grass      pixelImage
-	littleTree pixelImage
-}
 
-type pixelImage struct {
-	x1, y1, x2, y2 int
-}
+
+
 
 type Game struct {
 	hives      []Hive
@@ -149,9 +141,9 @@ func getCloserFromHiveForHuntingState(insectPointer *Insect, hiveEntryX float64,
 }
 
 func randomNumberBeetween(max, min float64) float64 {
-	//return rand.Intn(max-min) + min
 	return min + rand.Float64()*(max-min)
 }
+
 func removeBeeNoOrder(bees []Insect, i int) []Insect {
 	bees[i] = bees[len(bees)-1]
 	return bees[:len(bees)-1]
@@ -177,22 +169,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return screenWidth, screenHeight
 }
 
-func drawBackGround(screen *ebiten.Image) {
-	grass, optGrass := drawBgTiles(0, 0, bgPixel.grass)
-	x, y := getNumberOfTilesToDraw(screenWidth, screenHeight, 64)
-	screen.DrawImage(grass, optGrass)
-	for j := 0; j <= y; j++ {
-		optGrass.GeoM.Translate(0, float64(j*64))
-		//draw the first tile at x=0
-		screen.DrawImage(grass, optGrass)
-		for i := 0; i <= x; i++ {
-			optGrass.GeoM.Translate(64, 0)
-			screen.DrawImage(grass, optGrass)
-		}
-		optGrass.GeoM.Reset()
-		optGrass.GeoM.Scale(2, 2)
-	}
-}
+
 
 func getNumberOfTilesToDraw(w, h, tileSize int) (int, int) {
 	return divideAndRoundUp(w, tileSize), divideAndRoundUp(h, tileSize)
@@ -206,13 +183,7 @@ func divideAndRoundUp(a, b int) int {
 	return res
 }
 
-func drawBgTiles(x, y float64, pxI pixelImage) (*ebiten.Image, *ebiten.DrawImageOptions) {
-	opChar := &ebiten.DrawImageOptions{}
-	opChar.GeoM.Scale(2, 2)
-	opChar.GeoM.Translate(x, y)
-	//return bgPixel.img.SubImage(image.Rect(0, 0, 32, 32)).(*ebiten.Image), opChar
-	return bgPixel.img.SubImage(image.Rect(pxI.x1, pxI.y1, pxI.x2, pxI.y2)).(*ebiten.Image), opChar
-}
+
 
 func (g *Game) Update() error {
 	//animate(g)
@@ -248,13 +219,11 @@ func init() {
 		Hinting: font.HintingFull,
 	})
 
-	backgroundEbitenImage, _, err := ebitenutil.NewImageFromFile("./res/tiles/trees-and-bushes.png")
+	backgroundEbitenImage, _, err := ebitenutil.NewImageFromFile("./res/tiles/grass.png")
 
 	bgPixel = background{
 		img:        backgroundEbitenImage,
-		tree:       pixelImage{0, 0, 64, 64},
-		grass:      pixelImage{0, 96, 32, 128},
-		littleTree: pixelImage{0, 64, 32, 96},
+		grass:      pixelImage{32, 0, 64, 32},
 	}
 }
 
