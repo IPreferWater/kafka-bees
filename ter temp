@@ -1,0 +1,23 @@
+* [33mda3400c[m[33m ([m[1;36mHEAD -> [m[1;32mtemp[m[33m)[m feat(dev): change tiles grass,  add background.go
+* [33md2bc08c[m feat(dev): delete Docker & .env, add comment in kafkabee package
+* [33m071d807[m feat(dev): bee go faster when already on Y, wasp come less highter, can create Hives from arr
+* [33mee4e429[m feat(dev): refactor consumer, change behavior for wasp alert
+* [33m52def09[m feat(dev): refactor schema_registry.go
+* [33mdba374e[m[33m ([m[1;31morigin/master[m[33m)[m feat(dev): -WIP- commit change for schema_registry.go
+* [33mb8384bb[m feat(dev): refactor architecture for code lisibility
+* [33maa2725f[m feat(dev): add test to get Bee to be killed
+* [33m2e7692f[m feat(dev): draw the background
+* [33m92d67ce[m feat(dev): prepare better bgBackground & unit test tilesNumbers
+* [33med7ea5b[m feat(dev): add test for GetCloserFromHive
+* [33mf5f92d4[m feat(dev): add sendToStream when wasp are leaving
+* [33mde41898[m feat(dev): separate ebiten code from main.go, prepare _test
+* [33ma15ee2d[m feat(dev): add tiles for background
+* [33md4eb3bd[m feat(dev): wasp can kill bees and go
+* [33m28cd397[m feat(dev): add wasps, approche hive and wait
+* [33m156b9d6[m feat(dev): use homemade pixel img, use map instead of array for insect to go/come to allow more type
+* [33m5e9e928[m feat(dev): check if kafka is OK before sending to prevent nil error
+* [33m283bd86[m[33m ([m[1;32mmaster[m[33m)[m feat(dev): consume & produce bee to a different topic, add kafka-connect jdbc sink for bees
+* [33m68e952c[m feat(dev): prepare example for kafka-connect
+* [33m22b7baa[m feat(dev): add consumer for topic "detected"
+* [33maed6a6f[m feat(dev): move src to folder GO, can produce to kafka
+* [33md838944[m feat(dev):init
