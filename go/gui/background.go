@@ -8,6 +8,7 @@ import (
 
 var (
 	bgPixel background
+	mapCoordinateFlowers []coordinate
 )
 
 type background struct {
@@ -20,6 +21,7 @@ type pixelImage struct {
 }
 
 func drawBackGround(screen *ebiten.Image) {
+	//background tiles
 	grass, optGrass := drawBgTiles(0, 0, bgPixel.grass)
 	x, y := getNumberOfTilesToDraw(screenWidth, screenHeight, 64)
 	screen.DrawImage(grass, optGrass)
@@ -33,6 +35,32 @@ func drawBackGround(screen *ebiten.Image) {
 		}
 		optGrass.GeoM.Reset()
 		optGrass.GeoM.Scale(2, 2)
+	}
+
+	//flowers
+	drawFlowers(screen)
+
+}
+
+//init will have a randomized value once, otherwise on each frame the flower are mooving
+func initCoordinateFlowers(){
+	for j := 0; j <= 3; j++ {
+		for i := 0; i <= 6; i++ {
+			mapCoordinateFlowers = append(mapCoordinateFlowers, coordinate{
+				x: randomNumberBeetween(float64(i*50)-10,float64(i*50)+10),
+				y: randomNumberBeetween(float64(j*50)-10,float64(j*50)+10),
+			})
+		}
+	}
+}
+
+func drawFlowers(screen *ebiten.Image) {
+
+	for _,c := range mapCoordinateFlowers {
+		flowerOpt := &ebiten.DrawImageOptions{}
+		flowerOpt.GeoM.Translate(c.x, c.y)
+			flowerOpt.GeoM.Scale(3, 3)
+			screen.DrawImage(flowerImage, flowerOpt)
 	}
 }
 

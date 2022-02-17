@@ -19,6 +19,7 @@ var (
 	beeImage        *ebiten.Image
 	waspImage       *ebiten.Image
 	hiveImage       *ebiten.Image
+	flowerImage     *ebiten.Image
 	mplusNormalFont font.Face
 )
 
@@ -26,10 +27,6 @@ const (
 	screenWidth  = 1024
 	screenHeight = 600
 )
-
-
-
-
 
 type Game struct {
 	hives      []Hive
@@ -39,13 +36,13 @@ type Game struct {
 	frame      int
 }
 
-func createNewHive(id, beesToAdd, beesToRemove int, x, y float64)Hive{
+func createNewHive(id, beesToAdd, beesToRemove int, x, y float64) Hive {
 
 	hiveEntryX, hiveEntryY := x+52, y+90
 	hiveExitX, hiveExitY := x+80, y+90
 	return Hive{
-		ID:            id,
-		position:      coordinate{
+		ID: id,
+		position: coordinate{
 			x: x,
 			y: y,
 		},
@@ -57,11 +54,11 @@ func createNewHive(id, beesToAdd, beesToRemove int, x, y float64)Hive{
 		beesKilled:    0,
 		insectsToCome: map[InsecType][]Insect{},
 		insectsToGo:   map[InsecType][]Insect{},
-		hiveEntry:     coordinate{
+		hiveEntry: coordinate{
 			x: hiveEntryX,
 			y: hiveEntryY,
 		},
-		hiveExit:      coordinate{
+		hiveExit: coordinate{
 			x: hiveExitX,
 			y: hiveExitY,
 		},
@@ -91,14 +88,16 @@ func StartEbiten() {
 	hives := make([]Hive, 4)
 
 	for index, c := range hivesCoordinates {
-		hives[index] = createNewHive(index+1,2,1, c.x, c.y)
+		hives[index] = createNewHive(index+1, 2, 1, c.x, c.y)
 	}
 	g := &Game{
-		hives: hives,
+		hives:      hives,
 		mapCenterX: 9,
 		mapCenterY: 6,
 		worldSpeed: 3,
 	}
+
+	initCoordinateFlowers()
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Bees-World")
@@ -110,9 +109,9 @@ func StartEbiten() {
 func getCloserFromHive(insectPointer *Insect, hiveEntryX float64, hiveEntryY float64) {
 	if insectPointer.position.x <= hiveEntryX {
 
-		if hiveEntryY - insectPointer.position.y <5 {
+		if hiveEntryY-insectPointer.position.y < 5 {
 			insectPointer.position.x += 1.0
-		}else {
+		} else {
 			insectPointer.position.x += 0.5
 		}
 	} else {
@@ -134,9 +133,9 @@ func getCloserFromHiveForHuntingState(insectPointer *Insect, hiveEntryX float64,
 	}
 
 	if insectPointer.position.y <= hiveEntryY {
-		insectPointer.position.y +=  randomNumberBeetween(0, 1)
+		insectPointer.position.y += randomNumberBeetween(0, 1)
 	} else {
-		insectPointer.position.y -=  randomNumberBeetween(0, 1)
+		insectPointer.position.y -= randomNumberBeetween(0, 1)
 	}
 }
 
@@ -169,8 +168,6 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return screenWidth, screenHeight
 }
 
-
-
 func getNumberOfTilesToDraw(w, h, tileSize int) (int, int) {
 	return divideAndRoundUp(w, tileSize), divideAndRoundUp(h, tileSize)
 }
@@ -182,8 +179,6 @@ func divideAndRoundUp(a, b int) int {
 	}
 	return res
 }
-
-
 
 func (g *Game) Update() error {
 	//animate(g)
@@ -211,19 +206,34 @@ func init() {
 	}
 	hiveImage = hiveEbitenImage
 
+	flowerEbitenImage, _, err := ebitenutil.NewImageFromFile("./res/flower-yellow.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+	flowerImage = flowerEbitenImage
+
 	tt, err := opentype.Parse(fonts.MPlus1pRegular_ttf)
+	if err != nil {
+		log.Fatal(err)
+	}
 	const dpi = 72
 	mplusNormalFont, err = opentype.NewFace(tt, &opentype.FaceOptions{
 		Size:    24,
 		DPI:     dpi,
 		Hinting: font.HintingFull,
 	})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	backgroundEbitenImage, _, err := ebitenutil.NewImageFromFile("./res/tiles/grass.png")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	bgPixel = background{
-		img:        backgroundEbitenImage,
-		grass:      pixelImage{32, 0, 64, 32},
+		img:   backgroundEbitenImage,
+		grass: pixelImage{32, 0, 64, 32},
 	}
 }
 
